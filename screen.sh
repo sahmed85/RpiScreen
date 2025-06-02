@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
 #
-# kiosk-refresh.sh  —  Full-screen Chromium kiosk.
-#                     Refreshes the page every $REFRESH_SECS seconds.
+# screen.sh — fullscreen Chromium kiosk that refreshes automatically
+#             (waits 30 s before doing anything so the Pi can finish booting)
 #
-# Quick edit: set the refresh interval here ⬇
-REFRESH_SECS=10          # ← change to 30, 60, 600, … as required
+# Quick edit: change the refresh interval here ↓
+REFRESH_SECS=3600          # seconds between reloads
 # ------------------------------------------------------------------
-# Usage examples
-#   ./kiosk-refresh.sh
-#   ./kiosk-refresh.sh https://darussalammasjidatl.org/prayer-time/
 
 set -euo pipefail
 URL=${1:-""}
-export DISPLAY=:0        # X11 or XWayland
+export DISPLAY=:0         # X11 or XWayland
 
-# Hide cursor (if unclutter-xfixes is installed)
+# --- Give the system 30 s to settle --------------------------------
+sleep 30
+
+# --- Hide cursor if possible ---------------------------------------
 command -v unclutter-xfixes >/dev/null && unclutter-xfixes --idle 0 --root &
 
-# Launch Chromium in X11 kiosk mode, minimal logging
+# --- Launch Chromium in X11 kiosk mode -----------------------------
 chromium-browser \
   --ozone-platform=x11 \
   --kiosk \
@@ -30,7 +30,7 @@ chromium-browser \
   ${URL:+ "$URL"} &
 BROWSER_PID=$!
 
-# Wait until Chromium’s first window is visible and grab its WID
+# --- Wait for the window so xdotool can target it ------------------
 for _ in {1..30}; do
   CHROME_WID=$(xdotool search --sync --onlyvisible --pid "$BROWSER_PID" 2>/dev/null | head -n1 || true)
   [[ -n "$CHROME_WID" ]] && break
@@ -40,7 +40,7 @@ done
 
 echo "✅  Refreshing every ${REFRESH_SECS}s (window $CHROME_WID)"
 
-# Hard-refresh the window every REFRESH_SECS seconds
+# --- Hard-refresh the window every REFRESH_SECS seconds ------------
 while kill -0 "$BROWSER_PID" 2>/dev/null; do
   sleep "$REFRESH_SECS"
   xdotool key --window "$CHROME_WID" --clearmodifiers F5

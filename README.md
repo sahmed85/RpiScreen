@@ -64,7 +64,9 @@
 
 ## Autostart with systemd
 
-Create a unit file:
+> **Why the extra lines?**  When systemd starts a service at boot it runs as *root* and before the X‑session has published its authentication cookie.  Chromium and `unclutter-xfixes` therefore fail with “Failed to connect to the X server.”  Running the unit **as the desktop user** and pointing `XAUTHORITY` at `~/.Xauthority` fixes that.
+
+Create the unit file:
 
 ```bash
 sudo nano /etc/systemd/system/kiosk.service
@@ -73,19 +75,41 @@ sudo nano /etc/systemd/system/kiosk.service
 ```ini
 [Unit]
 Description=Chromium Kiosk (auto‑refresh)
-After=graphical.target network-online.target
+After=lightdm.service network-online.target   # wait for the display manager
 Wants=network-online.target
 
 [Service]
+User=pi                     # run in the desktop user’s context
+Group=pi
 Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/pi/.Xauthority
 Type=simple
-ExecStart=/home/pi/screen.sh https://<YOUR_URL_HERE>
+ExecStart=/home/pi/Desktop/screen.sh https://<YOUR_URL_HERE>
 Restart=on-failure
 RestartSec=5
 
 [Install]
 WantedBy=graphical.target
 ```
+
+Reload & enable:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now kiosk.service
+```
+
+Reboot—your Pi should land directly in the kiosk without X‑server errors.
+
+### Managing the service
+
+```bash
+sudo systemctl stop kiosk.service        # stop once
+sudo systemctl disable kiosk.service     # remove from startup
+journalctl -u kiosk.service -f           # live logs
+```
+
+---
 
 Enable and start:
 
@@ -120,6 +144,7 @@ journalctl -u kiosk.service -f           # live logs
 ## Roadmap / ideas
 
 * Add a DS3231 RTC to retain time without Internet.
+* Swap `screen.sh` for a Python version if you prefer (`kiosk_refresh.py` in the repo).
 * Use Anthias (Screenly OSE) when managing multiple kiosks.
 
 ---
