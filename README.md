@@ -1,4 +1,4 @@
-`# Raspberry Pi Kiosk
+# Raspberry Pi Kiosk
 
 > **Self‑refreshing fullscreen kiosk for Raspberry Pi 3 running Raspberry Pi OS (Bookworm/Bullseye).**
 > *Shows any URL you choose (e.g. `https://<YOUR_URL_HERE>`), reloading on an interval you set.*
