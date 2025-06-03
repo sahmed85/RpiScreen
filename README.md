@@ -75,11 +75,13 @@ sudo nano /etc/systemd/system/kiosk.service
 ```ini
 [Unit]
 Description=Chromium Kiosk (auto‑refresh)
-After=lightdm.service network-online.target   # wait for the display manager
+# wait for the display manager
+After=lightdm.service network-online.target  
 Wants=network-online.target
 
 [Service]
-User=pi                     # run in the desktop user’s context
+# run in the desktop user’s context
+User=pi                     
 Group=pi
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/pi/.Xauthority
