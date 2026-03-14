@@ -32,6 +32,7 @@ chromium-browser \
   --disable-infobars \
   --disable-session-crashed-bubble \
   --log-level=3 \
+  --password-store=basic \
   ${URL:+ "$URL"} &
 BROWSER_PID=$!
 
