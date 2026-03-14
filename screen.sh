@@ -11,6 +11,11 @@ set -euo pipefail
 URL=${1:-""}
 export DISPLAY=:0         # X11 or XWayland
 
+# --- Prevent screen from going inactive -----------------------------
+xset s off           # Disable screen saver
+xset -dpms           # Disable DPMS (Energy Star) features
+xset s noblank       # Don't blank the video device
+
 # --- Give the system 30 s to settle --------------------------------
 sleep 30
 
@@ -29,6 +34,15 @@ chromium-browser \
   --log-level=3 \
   ${URL:+ "$URL"} &
 BROWSER_PID=$!
+
+# --- Start background process to mimic keyboard activity ------------
+# Sends Shift key every 60 seconds to keep session active
+(
+  while true; do
+    sleep 60
+    xdotool key Shift_L
+  done
+) &
 
 # --- Wait for the window so xdotool can target it ------------------
 for _ in {1..30}; do
